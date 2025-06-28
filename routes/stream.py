@@ -14,7 +14,12 @@ router = APIRouter()
 def chat_stream(request: ChatRequest, db: Session = Depends(get_db)):
     """Endpoint pour le streaming de chat avec le modèle LLM."""
     message = {"role": "user", "content": request.message}
+    
+    def text_generator():
+        for chunk in chat_service.stream_response(message, db):
+            yield str(chunk)
+    
     return StreamingResponse(
-        chat_service.stream_response(message, db),
-        media_type="text/plain"
+        text_generator(),
+        media_type="text/plain; charset=utf-8"
     ) 
